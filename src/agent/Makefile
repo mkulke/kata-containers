@@ -40,6 +40,13 @@ ifeq ($(SEALED_SECRET),yes)
     override EXTRA_RUSTFEATURES += sealed-secret
 endif
 
+CDH ?= no
+
+# Enable confidential-data-hub feature of rust build
+ifeq ($(CDH),yes)
+    override EXTRA_RUSTFEATURES += confidential-data-hub
+endif
+
 include ../../utils.mk
 
 ifeq ($(ARCH), ppc64le)
