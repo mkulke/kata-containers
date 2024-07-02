@@ -27,9 +27,13 @@ kata-sys-util = { path = "../libs/kata-sys-util" }
 kata-types = { path = "../libs/kata-types" }
 safe-path = { path = "../libs/safe-path" }
 const_format = "0.2.30"
+attester = { git = "https://github.com/mkulke/guest-components", rev = "8db8247", default-features =false, features = [
+	"az-snp-vtpm-attester",
+	"az-tdx-vtpm-attester",
+], optional = true }
 
 # Async helpers
-async-trait = "0.1.42"
+async-trait = "0.1.80"
 async-recursion = "0.3.2"
 futures = "0.3.30"
 
@@ -90,6 +94,9 @@ regorus = { version = "0.1.4", default-features = false, features = [
     "regex",
 ], optional = true }
 
+[build-dependencies]
+ttrpc-codegen = "0.4.2"
+
 [dev-dependencies]
 tempfile = "3.1.0"
 test-utils = { path = "../libs/test-utils" }
@@ -108,7 +115,7 @@ lto = true
 default-pull = ["guest-pull"]
 seccomp = ["rustjail/seccomp"]
 standard-oci-runtime = ["rustjail/standard-oci-runtime"]
-agent-policy = ["regorus"]
+agent-policy = ["regorus", "attester"]
 guest-pull = ["image-rs", "openssl"]
 
 [[bin]]

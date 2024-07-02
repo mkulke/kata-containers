@@ -6,6 +6,7 @@
 use anyhow::Result;
 use protobuf::MessageDyn;
 use slog::Drain;
+use std::convert::TryInto;
 use tokio::io::AsyncWriteExt;
 
 use crate::rpc::ttrpc_error;
@@ -18,6 +19,14 @@ macro_rules! sl {
     () => {
         slog_scope::logger()
     };
+}
+
+async fn measure_policy(policy: &str) -> Result<()> {
+    let events = vec![policy.as_bytes().to_vec()];
+    let tee = attester::detect_tee_type();
+    let attester: attester::BoxedAttester = tee.try_into()?;
+    attester.extend_runtime_measurement(events, None).await?;
+    Ok(())
 }
 
 async fn allow_request(policy: &mut AgentPolicy, ep: &str, request: &str) -> ttrpc::Result<()> {
@@ -134,6 +143,7 @@ impl AgentPolicy {
         self.engine = Self::new_engine();
         self.engine
             .add_policy("agent_policy".to_string(), policy.to_string())?;
+        measure_policy(policy).await?;
         Ok(())
     }
 
