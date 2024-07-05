@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+use crate::aa_client;
 use anyhow::Result;
 use protobuf::MessageDyn;
 use slog::Drain;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::Mutex;
 
 use crate::rpc::ttrpc_error;
 use crate::AGENT_POLICY;
@@ -18,6 +20,17 @@ macro_rules! sl {
     () => {
         slog_scope::logger()
     };
+}
+
+lazy_static! {
+    static ref AA_CLIENT: Mutex<aa_client::AAClient> =
+        Mutex::new(aa_client::AAClient::new().unwrap());
+}
+
+async fn measure_policy(policy: &str) -> Result<()> {
+    let mut aa_client = AA_CLIENT.lock().await;
+    aa_client.measure_policy(policy).await?;
+    Ok(())
 }
 
 async fn allow_request(policy: &mut AgentPolicy, ep: &str, request: &str) -> ttrpc::Result<()> {
@@ -132,6 +145,7 @@ impl AgentPolicy {
     /// Replace the Policy in regorus.
     pub async fn set_policy(&mut self, policy: &str) -> Result<()> {
         self.engine = Self::new_engine();
+        measure_policy(policy).await?;
         self.engine
             .add_policy("agent_policy".to_string(), policy.to_string())?;
         Ok(())

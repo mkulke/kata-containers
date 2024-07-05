@@ -2828,6 +2828,7 @@ dependencies = [
  "tracing-opentelemetry",
  "tracing-subscriber",
  "ttrpc",
+ "ttrpc-codegen",
  "url",
  "vsock-exporter",
  "which",

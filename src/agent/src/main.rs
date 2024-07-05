@@ -38,6 +38,8 @@ use std::process::Command;
 use std::sync::Arc;
 use tracing::{instrument, span};
 
+#[cfg(feature = "agent-policy")]
+mod aa_client;
 mod cdh;
 mod config;
 mod console;
@@ -55,6 +57,8 @@ pub mod random;
 mod sandbox;
 mod signal;
 mod storage;
+#[cfg(feature = "agent-policy")]
+mod ttrpc_proto;
 mod uevent;
 mod util;
 mod version;
@@ -100,7 +104,7 @@ const NAME: &str = "kata-agent";
 const UNIX_SOCKET_PREFIX: &str = "unix://";
 
 const AA_PATH: &str = "/usr/local/bin/attestation-agent";
-const AA_ATTESTATION_SOCKET: &str =
+pub const AA_ATTESTATION_SOCKET: &str =
     "/run/confidential-containers/attestation-agent/attestation-agent.sock";
 const AA_ATTESTATION_URI: &str = concatcp!(UNIX_SOCKET_PREFIX, AA_ATTESTATION_SOCKET);
 
