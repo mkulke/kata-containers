@@ -10,6 +10,13 @@ pub struct AAClient {
 
 use crate::AA_ATTESTATION_SOCKET;
 
+/// Convenience macro to obtain the scope logger
+macro_rules! sl {
+    () => {
+        slog_scope::logger()
+    };
+}
+
 impl AAClient {
     pub fn new() -> Result<Self> {
         let aa_addr = format!("unix://{AA_ATTESTATION_SOCKET}");
@@ -21,12 +28,14 @@ impl AAClient {
     }
 
     pub async fn measure_policy(&mut self, policy: &str) -> Result<()> {
+        let content = serde_json::to_string(&policy).context("serialize policy body failed!")?;
         let req = ExtendRuntimeMeasurementRequest {
-            Domain: "kata-agent".into(),
+            Domain: "github.com/confidential-containers".into(),
             Operation: "SetPolicy".into(),
-            Content: policy.into(),
+            Content: content,
             ..Default::default()
         };
+        debug!(sl!(), "call extend_runtime_measurement w/ {:?}", req);
         self.service_client
             .extend_runtime_measurement(ttrpc::context::with_timeout(TTRPC_TIMEOUT), &req)
             .await

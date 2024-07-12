@@ -27,12 +27,6 @@ lazy_static! {
         Mutex::new(aa_client::AAClient::new().unwrap());
 }
 
-async fn measure_policy(policy: &str) -> Result<()> {
-    let mut aa_client = AA_CLIENT.lock().await;
-    aa_client.measure_policy(policy).await?;
-    Ok(())
-}
-
 async fn allow_request(policy: &mut AgentPolicy, ep: &str, request: &str) -> ttrpc::Result<()> {
     match policy.allow_request(ep, request).await {
         Ok((allowed, prints)) => {
@@ -142,10 +136,18 @@ impl AgentPolicy {
         Ok((allow, prints))
     }
 
+    async fn measure_policy(policy: &str) -> Result<()> {
+        let mut aa_client = AA_CLIENT.lock().await;
+        aa_client.measure_policy(policy).await?;
+        Ok(())
+    }
+
     /// Replace the Policy in regorus.
     pub async fn set_policy(&mut self, policy: &str) -> Result<()> {
         self.engine = Self::new_engine();
-        measure_policy(policy).await?;
+        if let Err(e) = Self::measure_policy(policy).await {
+            error!(sl!(), "policy: set_policy: measure_policy failed: {e}");
+        }
         self.engine
             .add_policy("agent_policy".to_string(), policy.to_string())?;
         Ok(())
